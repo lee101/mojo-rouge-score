@@ -1,0 +1,26 @@
+[project]
+name = "mojo-rouge-score"
+version = "0.1.0"
+description = "ROUGE metrics with compute-heavy kernels implemented in Mojo"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Lee Penkman", email = "leepenkman@gmail.com" }]
+keywords = ["mojo", "rouge", "nlp", "metrics"]
+dependencies = ["numpy", "nltk"]
+
+[project.optional-dependencies]
+dev = ["pytest", "rouge-score==0.1.2"]
+
+[project.urls]
+Homepage = "https://github.com/lee101/mojo-rouge-score"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "python" }
+
+[tool.setuptools.packages.find]
+where = ["python"]
