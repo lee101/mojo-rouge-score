@@ -74,6 +74,12 @@ def test_compact_unigram_counts_match_upstream():
     assert_scores_equal(ours.score(target, prediction), theirs.score(target, prediction))
 
 
+def test_unigram_simd_validation_scalar_tail():
+    target = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.int64)
+    prediction = np.array([6, 5, 4, 3, 2, 1, 0], dtype=np.int64)
+    assert _lib.unigram_overlap(target, prediction, np.zeros(7, dtype=np.int64)) == 7
+
+
 def test_simd_ngram_comparison_scalar_tail_matches_upstream():
     target = "a b c d e f g h i j a b c d e x g h i j"
     prediction = "a b c d e y g h i j a b c d e f g h i j"

@@ -8,17 +8,30 @@ def gram_equal(tokens_a: IPtr, start_a: Int, tokens_b: IPtr, start_b: Int, n: In
     comptime W = simd_width_of[DType.float64]()
     var k = 0
     while k + W <= n:
-        var equal = (
-            tokens_a.load[width=W](start_a + k)
-            == tokens_b.load[width=W](start_b + k)
-        )
-        if not equal:
+        if not tokens_a.load[width=W](start_a + k).eq(
+            tokens_b.load[width=W](start_b + k)
+        ).reduce_and():
             return False
         k += W
     while k < n:
         if tokens_a[start_a + k] != tokens_b[start_b + k]:
             return False
         k += 1
+    return True
+
+
+def token_ids_fit(tokens: IPtr, length: Int, capacity: Int) -> Bool:
+    comptime W = simd_width_of[DType.float64]()
+    var i = 0
+    while i + W <= length:
+        var values = tokens.load[width=W](i)
+        if values.reduce_min()[0] < 0 or values.reduce_max()[0] >= Int64(capacity):
+            return False
+        i += W
+    while i < length:
+        if tokens[i] < 0 or tokens[i] >= Int64(capacity):
+            return False
+        i += 1
     return True
 
 
@@ -36,17 +49,23 @@ def mrs_unigram_overlap(
     prediction_addr: Int,
     prediction_len: Int,
     counts_addr: Int,
+    counts_len: Int,
 ) abi("C") -> Int:
-    if target_len < 0 or prediction_len < 0:
+    if target_len < 0 or prediction_len < 0 or counts_len < 0:
         return -1
     if target_len == 0 or prediction_len == 0:
         return 0
-    if target_addr == 0 or prediction_addr == 0 or counts_addr == 0:
+    if target_addr == 0 or prediction_addr == 0 or counts_addr == 0 or counts_len == 0:
         return -1
 
     var target = IPtr(unsafe_from_address=target_addr)
     var prediction = IPtr(unsafe_from_address=prediction_addr)
     var counts = IPtr(unsafe_from_address=counts_addr)
+    if (
+        not token_ids_fit(target, target_len, counts_len)
+        or not token_ids_fit(prediction, prediction_len, counts_len)
+    ):
+        return -2
     for i in range(target_len):
         counts[Int(target[i])] += 1
 

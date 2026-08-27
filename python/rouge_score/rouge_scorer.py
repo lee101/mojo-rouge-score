@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import collections
-import itertools
 import re
 
 import nltk
@@ -17,10 +16,17 @@ def _ensure_str(value):
     return value.decode("utf-8") if isinstance(value, bytes) else value
 
 
+class _TokenIds(dict):
+    __slots__ = ()
+
+    def __missing__(self, token):
+        value = len(self) + 1
+        self[token] = value
+        return value
+
+
 def _encode_many(sequences):
-    token_ids = dict.fromkeys(itertools.chain.from_iterable(sequences))
-    for value, token in enumerate(token_ids, 1):
-        token_ids[token] = value
+    token_ids = _TokenIds()
     lookup = token_ids.__getitem__
     return [
         np.fromiter(

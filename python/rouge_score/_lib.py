@@ -17,7 +17,7 @@ LIB_PATH = os.environ.get(
 I = ctypes.c_int64
 
 _SIGNATURES = {
-    "mrs_unigram_overlap": ([I, I, I, I, I], I),
+    "mrs_unigram_overlap": ([I, I, I, I, I, I], I),
     "mrs_ngram_overlap": ([I, I, I, I, I, I, I, I], I),
     "mrs_lcs_length": ([I, I, I, I, I], I),
     "mrs_lcs_indices": ([I, I, I, I, I, I], I),
@@ -81,13 +81,16 @@ def unigram_overlap(
     counts = _array(counts, "counts", writable=True)
     target_len = _length(target.size, "target length")
     prediction_len = _length(prediction.size, "prediction length")
-    if target_len and (target.min() < 0 or target.max() >= counts.size):
-        raise ValueError("target token IDs are outside the counts buffer")
-    if prediction_len and (prediction.min() < 0 or prediction.max() >= counts.size):
-        raise ValueError("prediction token IDs are outside the counts buffer")
     result = lib().mrs_unigram_overlap(
-        _addr(target), target_len, _addr(prediction), prediction_len, _addr(counts)
+        _addr(target),
+        target_len,
+        _addr(prediction),
+        prediction_len,
+        _addr(counts),
+        _length(counts.size, "counts length"),
     )
+    if result == -2:
+        raise ValueError("token IDs are outside the counts buffer")
     return _checked_result("unigram overlap", result, min(target_len, prediction_len))
 
 

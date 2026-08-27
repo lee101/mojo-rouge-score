@@ -83,14 +83,19 @@ and score construction. Each cell is the best of three runs on identical input.
 
 | case | mojo-rouge-score | rouge-score 0.1.2 | speedup |
 | --- | ---: | ---: | ---: |
-| ROUGE-1, 200k tokens | 191.27 ms | 1053.19 ms | 5.51x |
-| ROUGE-2, 200k tokens | 186.86 ms | 721.68 ms | 3.86x |
-| ROUGE-1/2 together, 200k | 180.89 ms | 889.62 ms | 4.92x |
-| ROUGE-L, 2,500 tokens | 21.77 ms | 1662.39 ms | 76.35x |
-| ROUGE-Lsum, 20x100 tokens | 21.75 ms | 603.67 ms | 27.76x |
+| ROUGE-1, 200k tokens | 148.23 ms | 664.07 ms | 4.48x |
+| ROUGE-2, 200k tokens | 153.73 ms | 696.58 ms | 4.53x |
+| ROUGE-1/2 together, 200k | 148.74 ms | 796.34 ms | 5.35x |
+| ROUGE-L, 2,500 tokens | 12.24 ms | 1321.95 ms | 107.99x |
+| ROUGE-Lsum, 20x100 tokens | 22.66 ms | 599.68 ms | 26.47x |
 
 These are end-to-end timings, not kernel-only timings. Run `pixi run bench` to reproduce
 the cases; normal scheduler and system-load variation applies.
+
+GPU execution is intentionally not provided. N-gram hashing and overlap counting are
+dominated by memory access, and the LCS recurrence performs only a few operations per
+multiple values loaded. None approaches the roughly two-flops-per-byte threshold needed
+to justify host/device transfers and launch overhead.
 
 ## How it works
 
